@@ -20,7 +20,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Upgrade schema."""
-    op.create_table('departments',
+    op.create_table('departements',
     sa.Column('departement_id', sa.Integer(), nullable=False),
     sa.Column('departement_code', sa.String(length=20), nullable=False),
     sa.Column('departement_name', sa.String(length=100), nullable=False),
@@ -44,7 +44,7 @@ def upgrade() -> None:
     sa.Column('role', sa.Enum('employee', 'manager', 'admin', name='role_enum'), nullable=False),
     sa.Column('departement_id', sa.Integer(), nullable=False),
     sa.Column('user_status', sa.Enum('active', 'off', name='user_status_enum'), nullable=False),
-    sa.ForeignKeyConstraint(['departement_id'], ['departments.departement_id'], ),
+    sa.ForeignKeyConstraint(['departement_id'], ['departements.departement_id'], ),
     sa.PrimaryKeyConstraint('user_id'),
     sa.UniqueConstraint('email')
     )
@@ -77,4 +77,4 @@ def downgrade() -> None:
     op.drop_table('requests')
     op.drop_table('users')
     op.drop_table('products')
-    op.drop_table('departments')
+    op.drop_table('departements')
