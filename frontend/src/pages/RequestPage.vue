@@ -1,20 +1,26 @@
 <template>
     <div class="p-8">
       <div class="mb-6 flex items-center justify-between">
-        <div>
-          <h1 class="text-2xl font-bold text-gray-900">Pengajuan</h1>
-          <p class="mt-1 text-sm text-gray-500">{{ pageSubtitle }}</p>
+        <div class="flex items-center gap-3">
+          <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+            <ClipboardList class="h-5 w-5" />
+          </div>
+          <div>
+            <h1 class="text-2xl font-bold text-gray-900">Pengajuan</h1>
+            <p class="mt-0.5 text-sm text-gray-500">{{ pageSubtitle }}</p>
+          </div>
         </div>
         <button
           v-if="authStore.role === 'employee'"
           @click="openCreate"
-          class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500"
+          class="flex items-center gap-1.5 rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500"
         >
-          + Buat Pengajuan
+          <Plus class="h-4 w-4" />
+          Buat Pengajuan
         </button>
       </div>
-  
-      <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+
+      <div class="mb-4 flex flex-col gap-3 rounded-lg border border-gray-200 bg-white p-3 sm:flex-row sm:items-center sm:justify-between">
         <div class="relative w-full sm:max-w-xs">
           <input
             v-model="searchQuery"
@@ -26,7 +32,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z" />
           </svg>
         </div>
-  
+
         <div class="flex items-center gap-2">
           <label class="text-sm text-gray-500">Status:</label>
           <select
@@ -40,9 +46,12 @@
           </select>
         </div>
       </div>
-  
-      <p v-if="loading" class="text-sm text-gray-500">Memuat data...</p>
-      <p v-else-if="error" class="text-sm text-red-500">{{ error }}</p>
+
+      <div v-if="loading" class="flex items-center gap-2 py-10 text-sm text-gray-400">
+        <span class="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-indigo-500"></span>
+        Memuat data...
+      </div>
+      <p v-else-if="error" class="rounded-md bg-red-50 px-3 py-2 text-sm text-red-600">{{ error }}</p>
   
       <template v-else>
         <p v-if="filteredRequests.length === 0" class="rounded-md border border-gray-200 bg-white py-10 text-center text-sm text-gray-400">
@@ -121,6 +130,7 @@
 
   <script setup>
   import { ref, onMounted, computed, watch } from 'vue'
+  import { ClipboardList, Plus } from 'lucide-vue-next'
   import requestApi from '@/api/requestApi'
   import productApi from '@/api/productApi'
   import ConfirmDialog from '@/components/common/ConfirmDialog.vue'

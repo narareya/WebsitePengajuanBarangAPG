@@ -14,10 +14,12 @@ class RequestApprove(BaseModel):
 class RequestResponse(BaseModel):
     request_id: int
     user_id: int
+    user_name: Optional[str] = None
     request_date: datetime
     status: str
     approved_by: Optional[int] = None
     approved_at: Optional[datetime] = None
+    attachment_name: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -29,6 +31,7 @@ class RequestWithDetailsResponse(BaseModel):
     status: str
     approved_by: Optional[int] = None
     approved_at: Optional[datetime] = None
+    attachment_name: Optional[str] = None
     details: List[RequestDetailResponse]
 
     class Config:

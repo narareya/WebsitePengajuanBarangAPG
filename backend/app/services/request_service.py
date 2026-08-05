@@ -65,6 +65,7 @@ def get_request_with_details(db: Session, request_id: int):
         "status": request.status,
         "approved_by": request.approved_by,
         "approved_at": request.approved_at,
+        "attachment_name": request.attachment_name,
         "details": details
     }
 

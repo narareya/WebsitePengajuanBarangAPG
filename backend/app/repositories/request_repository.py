@@ -58,8 +58,28 @@ def find_filtered(db: Session, status: str = None, search: str = None, user_id: 
 
     total = query.count()
     items = query.order_by(RequestModel.request_date.desc()).offset((page - 1) * limit).limit(limit).all()
+    for item in items:
+        item.user_name = item.user.name if item.user else None
 
     return {"items": items, "total": total, "page": page, "limit": limit}
+
+
+def save_attachment(db: Session, request_id: int, filename: str, file_data: bytes):
+    request = find_by_id(db, request_id)
+    if request is None:
+        return None
+    request.attachment_name = filename
+    request.attachment_data = file_data
+    db.commit()
+    db.refresh(request)
+    return request
+
+
+def get_attachment(db: Session, request_id: int):
+    request = find_by_id(db, request_id)
+    if request is None or request.attachment_data is None:
+        return None
+    return {"filename": request.attachment_name, "data": request.attachment_data}
 
 
 def approve(db: Session, request_id: int, approved_by: int, new_status: str):

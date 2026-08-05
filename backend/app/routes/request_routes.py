@@ -1,4 +1,5 @@
-from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi import APIRouter, HTTPException, Depends, Query, UploadFile, File
+from fastapi.responses import Response
 from sqlalchemy.orm import Session
 from typing import Optional
 from app.config.database import get_db
@@ -79,6 +80,32 @@ def delete_request(
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    success = request_service.delete_request(db, request_id)
+    success = request_service.delete_request(db, request_id, current_user.user_id)
     if not success:
         raise HTTPException(status_code=404, detail="Request tidak ditemukan")
+
+
+@router.post("/{request_id}/attachment", response_model=RequestWithDetailsResponse)
+async def upload_attachment(
+    request_id: int,
+    file: UploadFile = File(...),
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    file_data = await file.read()
+    request_service.upload_attachment(db, request_id, current_user.user_id, file.filename, file_data)
+    return request_service.get_request_with_details(db, request_id)
+
+
+@router.get("/{request_id}/attachment")
+def download_attachment(
+    request_id: int,
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    result = request_service.download_attachment(db, request_id)
+    return Response(
+        content=result["data"],
+        media_type="application/octet-stream",
+        headers={"Content-Disposition": f'attachment; filename="{result["filename"]}"'}
+    )

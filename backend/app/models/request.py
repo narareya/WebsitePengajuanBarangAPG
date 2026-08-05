@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, func
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, LargeBinary, func
 from sqlalchemy.orm import relationship
 from app.config.database import Base
 
@@ -11,6 +11,8 @@ class RequestModel(Base):
     status = Column(String(20), nullable=False, default="pending")
     approved_by = Column(Integer, ForeignKey("users.user_id"), nullable=True)
     approved_at = Column(DateTime, nullable=True)
+    attachment_name = Column(String(255), nullable=True)
+    attachment_data = Column(LargeBinary, nullable=True)
 
     user = relationship("User", back_populates="requests", foreign_keys=[user_id])
     approver = relationship("User", foreign_keys=[approved_by])

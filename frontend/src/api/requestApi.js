@@ -21,5 +21,15 @@ export default {
   },
   delete(id) {
     return api.delete(`/requests/${id}`)
+  },
+  uploadAttachment(id, file) {
+    const formData = new FormData()
+    formData.append('file', file)
+    return api.post(`/requests/${id}/attachment`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  },
+  downloadAttachment(id) {
+    return api.get(`/requests/${id}/attachment`, { responseType: 'blob' })
   }
 }
