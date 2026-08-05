@@ -9,7 +9,7 @@ def find_by_id(db: Session, departement_id: int):
     return db.query(Departement).filter(Departement.departement_id == departement_id).first()
 
 
-def insert_department(db: Session, code: str, name: str, status: str):
+def insert_departement(db: Session, code: str, name: str, status: str):
     department = Departement(
         departement_code=code,
         departement_name=name,
