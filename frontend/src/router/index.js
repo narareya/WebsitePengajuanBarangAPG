@@ -8,6 +8,7 @@ import RequestPage from '@/pages/RequestPage.vue'
 import ProductPage from '@/pages/ProductPage.vue'
 import DepartementPage from '@/pages/DepartementPage.vue'
 import UserPage from '@/pages/UserPage.vue'
+import ActivityLogPage from '@/pages/master/ActivityLogPage.vue'
 
 const routes = [
   {
@@ -24,6 +25,7 @@ const routes = [
       { path: 'master/products', component: ProductPage, meta: { roles: ['admin'] } },
       { path: 'master/departments', component: DepartementPage, meta: { roles: ['admin'] } },
       { path: 'master/users', component: UserPage, meta: { roles: ['admin'] } },
+      { path: 'activity-log', component: ActivityLogPage, meta: { roles: ['admin'] } },
     ]
   }
 ]

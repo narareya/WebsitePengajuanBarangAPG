@@ -28,5 +28,11 @@ export const sidebarMenus = [
     path: '/master/products',
     icon: 'box',
     roles: ['admin']
+  },
+  {
+    label: 'Activity Log',
+    path: '/activity-log',
+    icon: 'chart',
+    roles: ['admin']
   }
 ]
