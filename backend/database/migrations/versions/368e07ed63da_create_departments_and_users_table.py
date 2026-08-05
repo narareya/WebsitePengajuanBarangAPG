@@ -11,7 +11,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.create_index(op.f('ix_departments_departement_id'), 'departments', ['departement_id'], unique=False)
+    op.create_index(op.f('ix_departements_departement_id'), 'departments', ['departement_id'], unique=False)
     op.alter_column('users', 'role',
                existing_type=postgresql.ENUM('employee', 'manager', 'admin', name='role_enum'),
                type_=sa.String(length=20),
@@ -33,4 +33,4 @@ def downgrade() -> None:
                existing_type=sa.String(length=20),
                type_=postgresql.ENUM('employee', 'manager', 'admin', name='role_enum'),
                existing_nullable=False)
-    op.drop_index(op.f('ix_departments_departement_id'), table_name='departments')
+    op.drop_index(op.f('ix_departements_departement_id'), table_name='departments')
