@@ -1,5 +1,7 @@
+from sqlalchemy import String
 from sqlalchemy.orm import Session
 from app.models.request import RequestModel
+from app.models.user import User
 from datetime import datetime
 
 def find_all(db: Session):
@@ -41,6 +43,24 @@ def delete(db: Session, request_id: int):
     db.delete(request)
     db.commit()
     return True
+
+def find_filtered(db: Session, status: str = None, search: str = None, user_id: int = None, page: int = 1, limit: int = 10):
+    query = db.query(RequestModel)
+
+    if user_id is not None:
+        query = query.filter(RequestModel.user_id == user_id)
+    if status:
+        query = query.filter(RequestModel.status == status)
+    if search:
+        query = query.join(User, RequestModel.user_id == User.user_id).filter(
+            (User.name.ilike(f"%{search}%")) | (RequestModel.request_id.cast(String).ilike(f"%{search}%"))
+        )
+
+    total = query.count()
+    items = query.order_by(RequestModel.request_date.desc()).offset((page - 1) * limit).limit(limit).all()
+
+    return {"items": items, "total": total, "page": page, "limit": limit}
+
 
 def approve(db: Session, request_id: int, approved_by: int, new_status: str):
     request = find_by_id(db, request_id)
