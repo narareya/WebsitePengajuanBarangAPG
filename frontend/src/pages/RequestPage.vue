@@ -141,7 +141,7 @@
       loading.value = true
       const res =
         authStore.role === 'employee' ? await requestApi.getMyRequests() : await requestApi.getAll()
-      requests.value = res.data
+      requests.value = res.data.items
     } catch (err) {
       console.error(err)
       error.value = 'Gagal memuat data pengajuan'

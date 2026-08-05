@@ -2,10 +2,10 @@ import api from './axios'
 
 export default {
   getMyRequests() {
-    return api.get('/requests/me')
+    return api.get('/requests/me', { params: { limit: 100 } })
   },
   getAll() {
-    return api.get('/requests/')
+    return api.get('/requests/', { params: { limit: 100 } })
   },
   getById(id) {
     return api.get(`/requests/${id}`)
