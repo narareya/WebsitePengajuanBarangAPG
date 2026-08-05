@@ -6,7 +6,11 @@ app = FastAPI(title="BEAmazink API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://202.155.16.63:8000", "http://10.10.11.144:5173"],
+    allow_origins=[
+        "http://localhost:5173",
+        "http://10.10.11.144:5173",
+        "https://website-pengajuan-barang-apg.vercel.app",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
