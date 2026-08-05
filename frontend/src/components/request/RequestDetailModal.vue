@@ -54,36 +54,56 @@
   
           <div class="mt-4">
             <p class="mb-2 text-sm font-semibold text-gray-700">Lampiran</p>
-            <div v-if="detail.attachment_name" class="flex items-center justify-between rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm">
-              <span class="flex items-center gap-2 truncate text-gray-700">
-                <Paperclip class="h-4 w-4 shrink-0 text-gray-400" />
-                <span class="truncate">{{ detail.attachment_name }}</span>
-              </span>
-              <button
-                @click="handleDownload"
-                :disabled="downloading"
-                class="ml-3 shrink-0 text-sm font-medium text-indigo-600 hover:text-indigo-500 disabled:opacity-50"
-              >
-                {{ downloading ? 'Mengunduh...' : 'Unduh' }}
-              </button>
+
+            <div v-if="detail.attachment_name">
+              <div v-if="attachmentPreviewUrl" class="overflow-hidden rounded-md border border-gray-200 bg-gray-50">
+                <img :src="attachmentPreviewUrl" :alt="detail.attachment_name" class="max-h-56 w-full object-contain" />
+                <div class="flex items-center justify-between border-t border-gray-200 bg-white px-3 py-2 text-xs">
+                  <span class="truncate text-gray-500">{{ detail.attachment_name }}</span>
+                  <button @click="handleDownload" class="shrink-0 font-medium text-indigo-600 hover:text-indigo-500">Unduh</button>
+                </div>
+              </div>
+              <div v-else-if="loadingPreview" class="flex items-center gap-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-6 text-sm text-gray-400">
+                <span class="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-indigo-500"></span>
+                Memuat gambar...
+              </div>
+              <div v-else class="flex items-center justify-between rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm">
+                <span class="flex items-center gap-2 truncate text-gray-700">
+                  <Paperclip class="h-4 w-4 shrink-0 text-gray-400" />
+                  <span class="truncate">{{ detail.attachment_name }}</span>
+                </span>
+                <button
+                  @click="handleDownload"
+                  :disabled="downloading"
+                  class="ml-3 shrink-0 text-sm font-medium text-indigo-600 hover:text-indigo-500 disabled:opacity-50"
+                >
+                  {{ downloading ? 'Mengunduh...' : 'Unduh' }}
+                </button>
+              </div>
             </div>
             <p v-else class="text-sm text-gray-400">Belum ada lampiran</p>
 
-            <div v-if="canUpload" class="mt-2 flex items-center gap-2">
-              <input
-                ref="fileInputRef"
-                type="file"
-                @change="handleFileChange"
-                class="block w-full text-xs text-gray-500 file:mr-3 file:rounded-md file:border-0 file:bg-indigo-50 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-indigo-600 hover:file:bg-indigo-100"
-              />
-              <button
-                v-if="selectedFile"
-                @click="handleUpload"
-                :disabled="uploading"
-                class="shrink-0 rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-500 disabled:opacity-50"
-              >
-                {{ uploading ? 'Mengunggah...' : 'Unggah' }}
-              </button>
+            <div v-if="canUpload" class="mt-2">
+              <div v-if="selectedFilePreviewUrl" class="mb-2 overflow-hidden rounded-md border border-gray-200">
+                <img :src="selectedFilePreviewUrl" alt="Preview" class="max-h-40 w-full object-contain" />
+              </div>
+              <div class="flex items-center gap-2">
+                <input
+                  ref="fileInputRef"
+                  type="file"
+                  accept="image/*"
+                  @change="handleFileChange"
+                  class="block w-full text-xs text-gray-500 file:mr-3 file:rounded-md file:border-0 file:bg-indigo-50 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-indigo-600 hover:file:bg-indigo-100"
+                />
+                <button
+                  v-if="selectedFile"
+                  @click="handleUpload"
+                  :disabled="uploading"
+                  class="shrink-0 rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-500 disabled:opacity-50"
+                >
+                  {{ uploading ? 'Mengunggah...' : 'Unggah' }}
+                </button>
+              </div>
             </div>
             <p v-if="uploadError" class="mt-1 text-xs text-red-500">{{ uploadError }}</p>
           </div>
@@ -148,7 +168,7 @@
   </template>
   
   <script setup>
-  import { ref, computed, onMounted } from 'vue'
+  import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
   import { Paperclip } from 'lucide-vue-next'
   import requestApi from '@/api/requestApi'
   import { useAuthStore } from '@/stores/auth'
@@ -170,9 +190,15 @@
 
   const fileInputRef = ref(null)
   const selectedFile = ref(null)
+  const selectedFilePreviewUrl = ref(null)
   const uploading = ref(false)
   const downloading = ref(false)
   const uploadError = ref(null)
+  const attachmentPreviewUrl = ref(null)
+  const loadingPreview = ref(false)
+
+  const isImageFile = (filename) =>
+    /\.(png|jpe?g|gif|webp|svg|bmp)$/i.test(filename || '')
 
   const canApprove = computed(() =>
     authStore.role === 'manager' && detail.value?.status === 'pending'
@@ -187,11 +213,26 @@
       loading.value = true
       const res = await requestApi.getById(props.requestId)
       detail.value = res.data
+      await loadAttachmentPreview()
     } catch (err) {
       console.error(err)
       error.value = 'Gagal memuat detail pengajuan'
     } finally {
       loading.value = false
+    }
+  }
+
+  const loadAttachmentPreview = async () => {
+    attachmentPreviewUrl.value = null
+    if (!detail.value?.attachment_name || !isImageFile(detail.value.attachment_name)) return
+    try {
+      loadingPreview.value = true
+      const res = await requestApi.downloadAttachment(props.requestId)
+      attachmentPreviewUrl.value = window.URL.createObjectURL(new Blob([res.data]))
+    } catch (err) {
+      console.error(err)
+    } finally {
+      loadingPreview.value = false
     }
   }
   
@@ -210,7 +251,9 @@
   }
   
   const handleFileChange = (e) => {
+    if (selectedFilePreviewUrl.value) window.URL.revokeObjectURL(selectedFilePreviewUrl.value)
     selectedFile.value = e.target.files?.[0] || null
+    selectedFilePreviewUrl.value = selectedFile.value ? window.URL.createObjectURL(selectedFile.value) : null
     uploadError.value = null
   }
 
@@ -222,7 +265,10 @@
       const res = await requestApi.uploadAttachment(props.requestId, selectedFile.value)
       detail.value = res.data
       selectedFile.value = null
+      if (selectedFilePreviewUrl.value) window.URL.revokeObjectURL(selectedFilePreviewUrl.value)
+      selectedFilePreviewUrl.value = null
       if (fileInputRef.value) fileInputRef.value.value = ''
+      await loadAttachmentPreview()
     } catch (err) {
       uploadError.value = err.response?.data?.detail || 'Gagal mengunggah lampiran'
     } finally {
@@ -263,4 +309,9 @@
   }
   
   onMounted(fetchDetail)
+
+  onBeforeUnmount(() => {
+    if (attachmentPreviewUrl.value) window.URL.revokeObjectURL(attachmentPreviewUrl.value)
+    if (selectedFilePreviewUrl.value) window.URL.revokeObjectURL(selectedFilePreviewUrl.value)
+  })
   </script>

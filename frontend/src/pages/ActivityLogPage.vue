@@ -1,8 +1,13 @@
 <template>
     <div class="p-8">
-      <div class="mb-6">
-        <h1 class="text-2xl font-bold text-gray-900">Activity Log</h1>
-        <p class="mt-1 text-sm text-gray-500">Riwayat aktivitas seluruh user</p>
+      <div class="mb-6 flex items-center gap-3">
+        <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+          <History class="h-5 w-5" />
+        </div>
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900">Activity Log</h1>
+          <p class="mt-0.5 text-sm text-gray-500">Riwayat aktivitas seluruh user</p>
+        </div>
       </div>
   
       <div class="mb-4 flex gap-3">
@@ -64,6 +69,7 @@
   
   <script setup>
   import { ref, onMounted } from 'vue'
+  import { History } from 'lucide-vue-next'
   import activityLogApi from '@/api/activityLogApi'
   
   const logs = ref([])

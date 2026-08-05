@@ -1,12 +1,17 @@
 <template>
   <div class="p-8">
-    <div class="mb-8 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p class="mt-1 text-sm text-gray-500">
-          Selamat datang,
-          <span class="font-medium text-gray-700">{{ authStore.user?.name }}</span>
-        </p>
+    <div class="mb-8 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      <div class="flex items-center gap-3">
+        <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+          <LayoutDashboard class="h-5 w-5" />
+        </div>
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
+          <p class="mt-0.5 text-sm text-gray-500">
+            Selamat datang,
+            <span class="font-medium text-gray-700">{{ authStore.user?.name }}</span>
+          </p>
+        </div>
       </div>
       <div class="text-sm text-gray-400">
         {{ todayLabel }}
@@ -116,6 +121,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { LayoutDashboard } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/api/axios'
 import StatCard from '@/components/dashboard/StatCard.vue'

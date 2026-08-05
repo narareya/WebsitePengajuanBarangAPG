@@ -1,3 +1,4 @@
+import mimetypes
 from fastapi import APIRouter, HTTPException, Depends, Query, UploadFile, File
 from fastapi.responses import Response
 from sqlalchemy.orm import Session
@@ -104,8 +105,11 @@ def download_attachment(
     db: Session = Depends(get_db)
 ):
     result = request_service.download_attachment(db, request_id)
+    content_type, _ = mimetypes.guess_type(result["filename"])
+    content_type = content_type or "application/octet-stream"
+    disposition = "inline" if content_type.startswith("image/") else "attachment"
     return Response(
         content=result["data"],
-        media_type="application/octet-stream",
-        headers={"Content-Disposition": f'attachment; filename="{result["filename"]}"'}
+        media_type=content_type,
+        headers={"Content-Disposition": f'{disposition}; filename="{result["filename"]}"'}
     )

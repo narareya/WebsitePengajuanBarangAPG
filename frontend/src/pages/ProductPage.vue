@@ -1,12 +1,18 @@
 <template>
     <div class="p-8">
       <div class="mb-6 flex items-center justify-between">
-        <div>
-          <h1 class="text-2xl font-bold text-gray-900">Master Product</h1>
-          <p class="mt-1 text-sm text-gray-500">Kelola daftar produk</p>
+        <div class="flex items-center gap-3">
+          <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+            <Package class="h-5 w-5" />
+          </div>
+          <div>
+            <h1 class="text-2xl font-bold text-gray-900">Master Product</h1>
+            <p class="mt-0.5 text-sm text-gray-500">Kelola daftar produk</p>
+          </div>
         </div>
-        <button @click="openCreate" class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500">
-          + Tambah Produk
+        <button @click="openCreate" class="flex items-center gap-1.5 rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500">
+          <Plus class="h-4 w-4" />
+          Tambah Produk
         </button>
       </div>
   
@@ -94,6 +100,7 @@
 
   <script setup>
   import { ref, onMounted, computed, watch } from 'vue'
+  import { Package, Plus } from 'lucide-vue-next'
   import productApi from '@/api/productApi'
   import ProductTable from '@/components/products/ProductTable.vue'
   import ProductFormModal from '@/components/products/ProductFormModal.vue'
