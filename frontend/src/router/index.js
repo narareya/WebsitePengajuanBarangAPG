@@ -8,7 +8,7 @@ import RequestPage from '@/pages/RequestPage.vue'
 import ProductPage from '@/pages/ProductPage.vue'
 import DepartementPage from '@/pages/DepartementPage.vue'
 import UserPage from '@/pages/UserPage.vue'
-import ActivityLogPage from '@/pages/master/ActivityLogPage.vue'
+import ActivityLogPage from '@/pages/ActivityLogPage.vue'
 
 const routes = [
   {
