@@ -59,7 +59,7 @@ def approve_request(
     current_user=Depends(require_role("manager", "admin")),
     db: Session = Depends(get_db)
 ):
-    return request_service.approve_request(db, request_id, current_user.user_id, data.status)
+    return request_service.approve_request(db, request_id, current_user.user_id, data.status, data.reason)
 
 
 @router.patch("/{request_id}/items", response_model=RequestWithDetailsResponse)

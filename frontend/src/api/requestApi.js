@@ -16,8 +16,8 @@ export default {
   updateItems(id, data) {
     return api.patch(`/requests/${id}/items`, data)
   },
-  approve(id, status) {
-    return api.patch(`/requests/${id}/approve`, { status })
+  approve(id, status, reason) {
+    return api.patch(`/requests/${id}/approve`, { status, reason })
   },
   delete(id) {
     return api.delete(`/requests/${id}`)

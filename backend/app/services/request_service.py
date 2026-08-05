@@ -69,9 +69,12 @@ def get_request_with_details(db: Session, request_id: int):
     }
 
 
-def approve_request(db: Session, request_id: int, approved_by: int, new_status: str):
+def approve_request(db: Session, request_id: int, approved_by: int, new_status: str, reason: str = None):
     if new_status not in ("approved", "rejected"):
         raise HTTPException(status_code=400, detail="Status harus 'approved' atau 'rejected'")
+
+    if new_status == "rejected" and not reason:
+        raise HTTPException(status_code=400, detail="Alasan reject wajib diisi")
 
     request = request_repository.find_by_id(db, request_id)
     if request is None:
@@ -83,8 +86,11 @@ def approve_request(db: Session, request_id: int, approved_by: int, new_status: 
     result = request_repository.approve(db, request_id, approved_by, new_status)
 
     action = "approve" if new_status == "approved" else "reject"
+    description = f"Pengajuan #{request_id} di-{new_status}"
+    if reason:
+        description += f" — Alasan: {reason}"
     activity_log_service.log_activity(
-        db, approved_by, action, "request", request_id, f"Pengajuan #{request_id} di-{new_status}"
+        db, approved_by, action, "request", request_id, description
     )
 
     return result

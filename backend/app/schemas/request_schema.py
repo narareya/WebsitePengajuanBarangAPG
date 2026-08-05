@@ -8,7 +8,8 @@ class RequestCreate(BaseModel):
     items: List[RequestDetailItem] = Field(..., min_length=1)
 
 class RequestApprove(BaseModel):
-    status: str 
+    status: str
+    reason: Optional[str] = None
 
 class RequestResponse(BaseModel):
     request_id: int

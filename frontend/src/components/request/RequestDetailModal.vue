@@ -53,9 +53,36 @@
           </div>
   
           <p v-if="actionError" class="mt-3 text-sm text-red-500">{{ actionError }}</p>
-          <div v-if="canApprove" class="mt-5 flex justify-end gap-2">
+
+          <div v-if="showRejectReason" class="mt-4 rounded-md border border-red-200 bg-red-50 p-3">
+            <label class="mb-1 block text-sm font-medium text-gray-700">Alasan reject</label>
+            <textarea
+              v-model="rejectReason"
+              rows="2"
+              class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-red-500 focus:outline-none"
+              placeholder="Tulis alasan reject..."
+            ></textarea>
+            <div class="mt-2 flex justify-end gap-2">
+              <button
+                @click="showRejectReason = false"
+                :disabled="processing"
+                class="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+              >
+                Batal
+              </button>
+              <button
+                @click="handleApprove('rejected', rejectReason)"
+                :disabled="processing || !rejectReason.trim()"
+                class="rounded-md bg-red-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-red-500 disabled:opacity-50"
+              >
+                {{ processing ? 'Memproses...' : 'Konfirmasi Reject' }}
+              </button>
+            </div>
+          </div>
+
+          <div v-else-if="canApprove" class="mt-5 flex justify-end gap-2">
             <button
-              @click="handleApprove('rejected')"
+              @click="showRejectReason = true"
               :disabled="processing"
               class="rounded-md border border-red-300 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"
             >
@@ -101,6 +128,8 @@
   const error = ref(null)
   const processing = ref(false)
   const actionError = ref(null)
+  const showRejectReason = ref(false)
+  const rejectReason = ref('')
   
   const canApprove = computed(() =>
     authStore.role === 'manager' && detail.value?.status === 'pending'
@@ -119,11 +148,11 @@
     }
   }
   
-  const handleApprove = async (status) => {
+  const handleApprove = async (status, reason) => {
     actionError.value = null
     try {
       processing.value = true
-      await requestApi.approve(props.requestId, status)
+      await requestApi.approve(props.requestId, status, reason)
       emit('updated')
       emit('close')
     } catch (err) {
