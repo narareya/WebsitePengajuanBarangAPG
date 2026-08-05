@@ -105,13 +105,25 @@
         @close="selectedRequestId = null"
         @updated="fetchRequests"
       />
+
+      <ConfirmDialog
+        v-if="showDeleteConfirm"
+        title="Hapus pengajuan ini?"
+        message="Pengajuan yang dihapus tidak bisa dikembalikan."
+        confirm-text="Hapus"
+        danger
+        :loading="deleting"
+        @confirm="confirmDelete"
+        @cancel="showDeleteConfirm = false"
+      />
     </div>
   </template>
-  
+
   <script setup>
   import { ref, onMounted, computed, watch } from 'vue'
   import requestApi from '@/api/requestApi'
   import productApi from '@/api/productApi'
+  import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
   import { useAuthStore } from '@/stores/auth'
   import RequestTable from '@/components/request/RequestTable.vue'
   import RequestFormModal from '@/components/request/RequestFormModal.vue'
@@ -201,13 +213,25 @@
     }
   })
   
-  const handleDelete = async (id) => {
-    if (!confirm('Yakin mau hapus pengajuan ini?')) return
+  const showDeleteConfirm = ref(false)
+  const deleting = ref(false)
+  const pendingDeleteId = ref(null)
+
+  const handleDelete = (id) => {
+    pendingDeleteId.value = id
+    showDeleteConfirm.value = true
+  }
+
+  const confirmDelete = async () => {
     try {
-      await requestApi.delete(id)
+      deleting.value = true
+      await requestApi.delete(pendingDeleteId.value)
+      showDeleteConfirm.value = false
       await fetchRequests()
     } catch (err) {
       alert(err.response?.data?.detail || 'Gagal menghapus pengajuan')
+    } finally {
+      deleting.value = false
     }
   }
   

@@ -70,14 +70,26 @@
         @close="closeForm"
         @saved="fetchDepartments"
       />
+
+      <ConfirmDialog
+        v-if="showDeleteConfirm"
+        title="Hapus department ini?"
+        message="Department yang dihapus tidak bisa dikembalikan."
+        confirm-text="Hapus"
+        danger
+        :loading="deleting"
+        @confirm="confirmDelete"
+        @cancel="showDeleteConfirm = false"
+      />
     </div>
   </template>
-  
+
   <script setup>
   import { ref, onMounted, computed, watch } from 'vue'
   import departementApi from '@/api/departementApi'
   import DepartementTable from '@/components/departement/DepartementTable.vue'
   import DepartementFormModal from '@/components/departement/DepartementFormModal.vue'
+  import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
   
   const departments = ref([])
   const loading = ref(true)
@@ -105,7 +117,7 @@
   const filteredDepartments = computed(() => {
     const q = searchQuery.value.trim().toLowerCase()
     if (!q) return departments.value
-    return departments.value.filter((d) => d.name?.toLowerCase().includes(q))
+    return departments.value.filter((d) => d.departement_name?.toLowerCase().includes(q))
   })
   
   const totalPages = computed(() => Math.max(1, Math.ceil(filteredDepartments.value.length / pageSize)))
@@ -135,15 +147,27 @@
     selectedDepartment.value = null
   }
   
-  const handleDelete = async (id) => {
-    if (!confirm('Yakin mau hapus department ini?')) return
+  const showDeleteConfirm = ref(false)
+  const deleting = ref(false)
+  const pendingDeleteId = ref(null)
+
+  const handleDelete = (id) => {
+    pendingDeleteId.value = id
+    showDeleteConfirm.value = true
+  }
+
+  const confirmDelete = async () => {
     try {
-      await departementApi.delete(id)
+      deleting.value = true
+      await departementApi.delete(pendingDeleteId.value)
+      showDeleteConfirm.value = false
       await fetchDepartments()
     } catch (err) {
       alert(err.response?.data?.detail || 'Gagal menghapus department')
+    } finally {
+      deleting.value = false
     }
   }
-  
+
   onMounted(fetchDepartments)
   </script>

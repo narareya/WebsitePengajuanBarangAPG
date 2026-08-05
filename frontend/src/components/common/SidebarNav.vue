@@ -27,18 +27,27 @@
     </nav>
 
     <div ref="profileRef" class="relative border-t border-gray-100 px-4 py-4">
-      <div
-        v-if="showMenu"
-        class="absolute bottom-full left-4 right-4 mb-2 overflow-hidden rounded-md border border-gray-200 bg-white shadow-lg"
+      <Transition
+        enter-active-class="transition ease-out duration-100"
+        enter-from-class="opacity-0 translate-y-1"
+        enter-to-class="opacity-100 translate-y-0"
+        leave-active-class="transition ease-in duration-75"
+        leave-from-class="opacity-100 translate-y-0"
+        leave-to-class="opacity-0 translate-y-1"
       >
-        <button
-          @click="handleLogout"
-          class="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm font-medium text-red-600 hover:bg-red-50"
+        <div
+          v-if="showMenu"
+          class="absolute bottom-full left-4 right-4 mb-2 overflow-hidden rounded-md border border-gray-200 bg-white shadow-lg"
         >
-          <LogOut class="h-4 w-4" />
-          Logout
-        </button>
-      </div>
+          <button
+            @click="handleLogout"
+            class="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm font-medium text-red-600 hover:bg-red-50"
+          >
+            <LogOut class="h-4 w-4" />
+            Logout
+          </button>
+        </div>
+      </Transition>
 
       <button
         type="button"
@@ -58,6 +67,16 @@
         />
       </button>
     </div>
+
+    <ConfirmDialog
+      v-if="showLogoutConfirm"
+      title="Logout dari akun?"
+      message="Kamu akan keluar dari sesi ini dan perlu login kembali."
+      confirm-text="Logout"
+      danger
+      @confirm="confirmLogout"
+      @cancel="showLogoutConfirm = false"
+    />
   </aside>
 </template>
 
@@ -68,6 +87,7 @@ import { LogOut, ChevronUp } from 'lucide-vue-next'
 import { sidebarMenus } from '@/config/SidebarNav'
 import { iconMap } from '@/config/Icons'
 import { useAuthStore } from '@/stores/auth'
+import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 import logo from '@/assets/logoamazink.png'
 
 const route = useRoute()
@@ -76,6 +96,7 @@ const authStore = useAuthStore()
 
 const showMenu = ref(false)
 const profileRef = ref(null)
+const showLogoutConfirm = ref(false)
 
 const visibleMenus = computed(() =>
   sidebarMenus
@@ -92,6 +113,11 @@ const initials = computed(() => {
 
 const handleLogout = () => {
   showMenu.value = false
+  showLogoutConfirm.value = true
+}
+
+const confirmLogout = () => {
+  showLogoutConfirm.value = false
   authStore.logout()
   router.push('/login')
 }

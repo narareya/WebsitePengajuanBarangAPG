@@ -78,14 +78,26 @@
         @close="closeForm"
         @saved="fetchProducts"
       />
+
+      <ConfirmDialog
+        v-if="showDeleteConfirm"
+        title="Hapus produk ini?"
+        message="Produk yang dihapus tidak bisa dikembalikan."
+        confirm-text="Hapus"
+        danger
+        :loading="deleting"
+        @confirm="confirmDelete"
+        @cancel="showDeleteConfirm = false"
+      />
     </div>
   </template>
-  
+
   <script setup>
   import { ref, onMounted, computed, watch } from 'vue'
   import productApi from '@/api/productApi'
   import ProductTable from '@/components/products/ProductTable.vue'
   import ProductFormModal from '@/components/products/ProductFormModal.vue'
+  import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
   
   const products = ref([])
   const loading = ref(true)
@@ -154,15 +166,27 @@
     selectedProduct.value = null
   }
   
-  const handleDelete = async (id) => {
-    if (!confirm('Yakin mau hapus produk ini?')) return
+  const showDeleteConfirm = ref(false)
+  const deleting = ref(false)
+  const pendingDeleteId = ref(null)
+
+  const handleDelete = (id) => {
+    pendingDeleteId.value = id
+    showDeleteConfirm.value = true
+  }
+
+  const confirmDelete = async () => {
     try {
-      await productApi.delete(id)
+      deleting.value = true
+      await productApi.delete(pendingDeleteId.value)
+      showDeleteConfirm.value = false
       await fetchProducts()
     } catch (err) {
       alert(err.response?.data?.detail || 'Gagal menghapus produk')
+    } finally {
+      deleting.value = false
     }
   }
-  
+
   onMounted(fetchProducts)
   </script>

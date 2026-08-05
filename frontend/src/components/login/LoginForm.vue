@@ -18,15 +18,20 @@
         required
       />
   
-      <AppButton type="submit">Sign in</AppButton>
+      <AppButton type="submit" :disabled="loading">
+        {{ loading ? 'Signing in...' : 'Sign in' }}
+      </AppButton>
     </form>
   </template>
-  
+
   <script setup>
   import { reactive } from 'vue'
   import InputField from '@/components/common/InputField.vue'
   import AppButton from '@/components/common/AppButton.vue'
-  
+
+  defineProps({
+    loading: { type: Boolean, default: false },
+  })
   const emit = defineEmits(['submit'])
   
   const form = reactive({
@@ -38,4 +43,11 @@
   function handleSubmit() {
     emit('submit', { ...form })
   }
+
+  function setCredentials(email, password) {
+    form.email = email
+    form.password = password
+  }
+
+  defineExpose({ setCredentials })
   </script>

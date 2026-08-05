@@ -86,14 +86,26 @@
         @close="closeForm"
         @saved="fetchUsers"
       />
+
+      <ConfirmDialog
+        v-if="showDeleteConfirm"
+        title="Hapus user ini?"
+        message="User yang dihapus tidak bisa dikembalikan."
+        confirm-text="Hapus"
+        danger
+        :loading="deleting"
+        @confirm="confirmDelete"
+        @cancel="showDeleteConfirm = false"
+      />
     </div>
   </template>
-  
+
   <script setup>
   import { ref, onMounted, computed, watch } from 'vue'
   import userApi from '@/api/userApi'
   import UserTable from '@/components/user/UserTable.vue'
   import UserFormModal from '@/components/user/UserFormModal.vue'
+  import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
   
   const users = ref([])
   const loading = ref(true)
@@ -167,15 +179,27 @@
     selectedUser.value = null
   }
   
-  const handleDelete = async (id) => {
-    if (!confirm('Yakin mau hapus user ini?')) return
+  const showDeleteConfirm = ref(false)
+  const deleting = ref(false)
+  const pendingDeleteId = ref(null)
+
+  const handleDelete = (id) => {
+    pendingDeleteId.value = id
+    showDeleteConfirm.value = true
+  }
+
+  const confirmDelete = async () => {
     try {
-      await userApi.delete(id)
+      deleting.value = true
+      await userApi.delete(pendingDeleteId.value)
+      showDeleteConfirm.value = false
       await fetchUsers()
     } catch (err) {
       alert(err.response?.data?.detail || 'Gagal menghapus user')
+    } finally {
+      deleting.value = false
     }
   }
-  
+
   onMounted(fetchUsers)
   </script>
