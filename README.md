@@ -203,7 +203,7 @@ Setelah menjalankan `seed.py`, tersedia akun berikut untuk mencoba aplikasi:
 Setelah backend berjalan, dokumentasi interaktif (Swagger UI) tersedia otomatis di:
 
 ```
-http://localhost:8000/docs
+http://202.155.16.63:8000/docs
 ```
 
 ---
