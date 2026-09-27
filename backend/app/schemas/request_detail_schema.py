@@ -20,6 +20,7 @@ class RequestDetailResponse(BaseModel):
     product_id: int
     quantity: int
     product_name: Optional[str] = None
+    product_stock: Optional[int] = None
 
     class Config:
         from_attributes = True

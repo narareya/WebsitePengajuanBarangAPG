@@ -9,8 +9,9 @@ def find_by_id(db: Session, detail_id: int):
 
 def find_by_request(db: Session, request_id: int):
     details = db.query(RequestDetail).filter(RequestDetail.request_id == request_id).all()
-    for d in details: 
+    for d in details:
         d.product_name = d.product.product_name if d.product else None
+        d.product_stock = d.product.stock_quantity if d.product else None
     return details
 
 

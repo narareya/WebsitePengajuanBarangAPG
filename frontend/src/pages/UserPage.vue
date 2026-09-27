@@ -113,7 +113,9 @@
   import UserTable from '@/components/user/UserTable.vue'
   import UserFormModal from '@/components/user/UserFormModal.vue'
   import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
-  
+  import { useToastStore } from '@/stores/toast'
+
+  const toast = useToastStore()
   const users = ref([])
   const loading = ref(true)
   const error = ref(null)
@@ -202,7 +204,7 @@
       showDeleteConfirm.value = false
       await fetchUsers()
     } catch (err) {
-      alert(err.response?.data?.detail || 'Gagal menghapus user')
+      toast.error(err.response?.data?.detail || 'Gagal menghapus user')
     } finally {
       deleting.value = false
     }

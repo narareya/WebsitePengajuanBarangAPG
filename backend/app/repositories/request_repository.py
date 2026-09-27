@@ -44,9 +44,7 @@ def delete(db: Session, request_id: int):
     db.commit()
     return True
 
-def find_filtered(db: Session, status: str = None, search: str = None, user_id: int = None, page: int = 1, limit: int = 10):
-    query = db.query(RequestModel)
-
+def _apply_filters(query, status=None, search=None, user_id=None):
     if user_id is not None:
         query = query.filter(RequestModel.user_id == user_id)
     if status:
@@ -55,6 +53,11 @@ def find_filtered(db: Session, status: str = None, search: str = None, user_id: 
         query = query.join(User, RequestModel.user_id == User.user_id).filter(
             (User.name.ilike(f"%{search}%")) | (RequestModel.request_id.cast(String).ilike(f"%{search}%"))
         )
+    return query
+
+
+def find_filtered(db: Session, status: str = None, search: str = None, user_id: int = None, page: int = 1, limit: int = 10):
+    query = _apply_filters(db.query(RequestModel), status, search, user_id)
 
     total = query.count()
     items = query.order_by(RequestModel.request_date.desc()).offset((page - 1) * limit).limit(limit).all()
@@ -62,6 +65,14 @@ def find_filtered(db: Session, status: str = None, search: str = None, user_id: 
         item.user_name = item.user.name if item.user else None
 
     return {"items": items, "total": total, "page": page, "limit": limit}
+
+
+def find_all_filtered(db: Session, status: str = None, search: str = None, user_id: int = None):
+    query = _apply_filters(db.query(RequestModel), status, search, user_id)
+    items = query.order_by(RequestModel.request_date.desc()).all()
+    for item in items:
+        item.user_name = item.user.name if item.user else None
+    return items
 
 
 def save_attachment(db: Session, request_id: int, filename: str, file_data: bytes):

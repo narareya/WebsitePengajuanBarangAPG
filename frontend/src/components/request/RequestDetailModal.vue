@@ -38,15 +38,21 @@
                 <tr>
                   <th class="px-3 py-2 text-left text-xs font-semibold uppercase text-gray-500">Produk</th>
                   <th class="px-3 py-2 text-right text-xs font-semibold uppercase text-gray-500">Qty</th>
+                  <th class="px-3 py-2 text-right text-xs font-semibold uppercase text-gray-500">Stok Tersedia</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-100">
                 <tr v-if="!detail.details || detail.details.length === 0">
-                  <td colspan="2" class="px-3 py-4 text-center text-gray-400">Tidak ada barang</td>
+                  <td colspan="3" class="px-3 py-4 text-center text-gray-400">Tidak ada barang</td>
                 </tr>
                 <tr v-for="item in detail.details" :key="item.detail_id">
                   <td class="px-3 py-2 text-gray-700">{{ item.product_name }}</td>
                   <td class="px-3 py-2 text-right text-gray-700">{{ item.quantity }}</td>
+                  <td class="px-3 py-2 text-right">
+                    <span :class="item.product_stock < item.quantity ? 'font-medium text-red-600' : 'text-gray-500'">
+                      {{ item.product_stock ?? '-' }}
+                    </span>
+                  </td>
                 </tr>
               </tbody>
             </table>

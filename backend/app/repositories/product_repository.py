@@ -10,15 +10,35 @@ def find_by_id(db: Session, product_id: int):
 def find_by_status(db: Session, product_status: str):
     return db.query(Product).filter(Product.product_status == product_status).all()
 
-def insert_product(db: Session, product_code: str, product_name: str, product_desc: str, product_price: float, product_status: str = "active"):
+def insert_product(db: Session, product_code: str, product_name: str, product_desc: str, product_price: float, product_status: str = "active", stock_quantity: int = 0):
     product = Product(
         product_code=product_code,
         product_name=product_name,
         product_desc=product_desc,
         product_price=product_price,
-        product_status=product_status
+        product_status=product_status,
+        stock_quantity=stock_quantity
     )
     db.add(product)
+    db.commit()
+    db.refresh(product)
+    return product
+
+
+def decrement_stock(db: Session, product_id: int, quantity: int):
+    product = find_by_id(db, product_id)
+    if product is None:
+        return None
+    product.stock_quantity -= quantity
+    db.commit()
+    db.refresh(product)
+    return product
+
+def increment_stock(db: Session, product_id: int, quantity: int):
+    product = find_by_id(db, product_id)
+    if product is None:
+        return None
+    product.stock_quantity += quantity
     db.commit()
     db.refresh(product)
     return product

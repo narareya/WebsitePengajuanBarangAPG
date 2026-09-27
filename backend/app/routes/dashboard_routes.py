@@ -5,8 +5,9 @@ from sqlalchemy.orm import Session
 
 from app.config.database import get_db
 from app.models.request import RequestModel
+from app.models.product import Product
 from app.models.user import User
-from app.schemas.dashboard_schema import DashboardSummary, RecentActivityItem
+from app.schemas.dashboard_schema import DashboardSummary, RecentActivityItem, LowStockProduct
 from app.middlewares.auth_middleware import get_current_user
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
@@ -16,6 +17,8 @@ STATUS_LABELS = {
     "pending": "Menunggu",
     "rejected": "Ditolak",
 }
+
+LOW_STOCK_THRESHOLD = 5
 
 
 @router.get("/summary", response_model=DashboardSummary)
@@ -56,11 +59,27 @@ def get_dashboard_summary(
             ((this_month_count - last_month_count) / last_month_count) * 100, 1
         )
 
+    low_stock_count = 0
+    low_stock_products = []
+    if current_user.role in ("admin", "manager"):
+        low_stock_products_query = (
+            db.query(Product)
+            .filter(Product.stock_quantity <= LOW_STOCK_THRESHOLD)
+            .order_by(Product.stock_quantity.asc())
+        )
+        low_stock_count = low_stock_products_query.count()
+        low_stock_products = [
+            LowStockProduct(product_id=p.product_id, product_name=p.product_name, stock_quantity=p.stock_quantity)
+            for p in low_stock_products_query.limit(8).all()
+        ]
+
     return DashboardSummary(
         total_submissions=approved_total if current_user.role == "manager" else total,
         pending_approval=pending,
         total_trend=total_trend,
         by_status=by_status,
+        low_stock_count=low_stock_count,
+        low_stock_products=low_stock_products,
     )
 
 

@@ -20,6 +20,8 @@ class RequestResponse(BaseModel):
     approved_by: Optional[int] = None
     approved_at: Optional[datetime] = None
     attachment_name: Optional[str] = None
+    items_summary: Optional[str] = None
+    stock_warning: bool = False
 
     class Config:
         from_attributes = True

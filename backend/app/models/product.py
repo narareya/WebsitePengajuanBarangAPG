@@ -11,5 +11,6 @@ class Product(Base):
     product_desc = Column(String(255), nullable=True)
     product_price = Column(Numeric(12, 2), nullable=False)
     product_status = Column(String(20), nullable=False)
+    stock_quantity = Column(Integer, nullable=False, default=0)
 
     request_details = relationship("RequestDetail", back_populates="product")

@@ -5,23 +5,28 @@
           {{ isEdit ? 'Edit Pengajuan' : 'Buat Pengajuan Baru' }}
         </h2>
   
-        <div v-for="(item, index) in form.items" :key="index" class="mb-3 flex items-center gap-2">
-          <select v-model="item.product_id" class="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm">
-            <option disabled value="">Pilih Produk</option>
-            <option v-for="p in products" :key="p.product_id" :value="p.product_id">
-              {{ p.product_name }}
-            </option>
-          </select>
-          <input
-            v-model.number="item.quantity"
-            type="number"
-            min="1"
-            placeholder="Qty"
-            class="w-20 rounded-md border border-gray-300 px-3 py-2 text-sm"
-          />
-          <button v-if="form.items.length > 1" @click="removeItem(index)" class="text-red-400 hover:text-red-500" type="button">
-            ✕
-          </button>
+        <div v-for="(item, index) in form.items" :key="index" class="mb-3">
+          <div class="flex items-center gap-2">
+            <select v-model="item.product_id" class="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm">
+              <option disabled value="">Pilih Produk</option>
+              <option v-for="p in products" :key="p.product_id" :value="p.product_id">
+                {{ p.product_name }} (Stok: {{ p.stock_quantity }})
+              </option>
+            </select>
+            <input
+              v-model.number="item.quantity"
+              type="number"
+              min="1"
+              placeholder="Qty"
+              class="w-20 rounded-md border border-gray-300 px-3 py-2 text-sm"
+            />
+            <button v-if="form.items.length > 1" @click="removeItem(index)" class="text-red-400 hover:text-red-500" type="button">
+              ✕
+            </button>
+          </div>
+          <p v-if="stockWarning(item)" class="mt-1 text-xs text-amber-600">
+            Stok tersisa cuma {{ stockOf(item.product_id) }}, kemungkinan ditolak kalau nggak direstock dulu.
+          </p>
         </div>
   
         <button @click="addItem" type="button" class="mb-4 text-sm font-medium text-indigo-600 hover:text-indigo-500">
@@ -85,6 +90,12 @@
 
   const addItem = () => form.value.items.push({ product_id: '', quantity: 1 })
   const removeItem = (index) => form.value.items.splice(index, 1)
+
+  const stockOf = (productId) => props.products.find(p => p.product_id === productId)?.stock_quantity
+  const stockWarning = (item) => {
+    const stock = stockOf(item.product_id)
+    return item.product_id && stock !== undefined && item.quantity > stock
+  }
 
   const handleFileChange = (e) => {
     if (previewUrl.value) window.URL.revokeObjectURL(previewUrl.value)

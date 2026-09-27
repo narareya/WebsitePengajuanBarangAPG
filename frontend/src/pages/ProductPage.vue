@@ -44,7 +44,7 @@
           Tidak ada produk yang cocok.
         </p>
   
-        <ProductTable v-else :products="paginatedProducts" @edit="openEdit" @delete="handleDelete" />
+        <ProductTable v-else :products="paginatedProducts" @edit="openEdit" @delete="handleDelete" @add-stock="openAddStock" />
   
         <div v-if="filteredProducts.length > 0" class="mt-4 flex items-center justify-between">
           <p class="text-sm text-gray-500">
@@ -85,6 +85,13 @@
         @saved="fetchProducts"
       />
 
+      <AddStockModal
+        v-if="showAddStock"
+        :product="stockProduct"
+        @close="showAddStock = false"
+        @saved="fetchProducts"
+      />
+
       <ConfirmDialog
         v-if="showDeleteConfirm"
         title="Hapus produk ini?"
@@ -104,13 +111,18 @@
   import productApi from '@/api/productApi'
   import ProductTable from '@/components/products/ProductTable.vue'
   import ProductFormModal from '@/components/products/ProductFormModal.vue'
+  import AddStockModal from '@/components/products/AddStockModal.vue'
   import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
-  
+  import { useToastStore } from '@/stores/toast'
+
+  const toast = useToastStore()
   const products = ref([])
   const loading = ref(true)
   const error = ref(null)
   const showForm = ref(false)
   const selectedProduct = ref(null)
+  const showAddStock = ref(false)
+  const stockProduct = ref(null)
   
   const searchQuery = ref('')
   const statusFilter = ref('all')
@@ -134,13 +146,12 @@
     let result = products.value
   
     if (statusFilter.value !== 'all') {
-      const wantActive = statusFilter.value === 'active'
-      result = result.filter((p) => Boolean(p.is_active) === wantActive)
+      result = result.filter((p) => p.product_status === statusFilter.value)
     }
-  
+
     const q = searchQuery.value.trim().toLowerCase()
     if (q) {
-      result = result.filter((p) => p.name?.toLowerCase().includes(q))
+      result = result.filter((p) => p.product_name?.toLowerCase().includes(q))
     }
   
     return result
@@ -172,6 +183,11 @@
     showForm.value = false
     selectedProduct.value = null
   }
+
+  const openAddStock = (product) => {
+    stockProduct.value = product
+    showAddStock.value = true
+  }
   
   const showDeleteConfirm = ref(false)
   const deleting = ref(false)
@@ -189,7 +205,7 @@
       showDeleteConfirm.value = false
       await fetchProducts()
     } catch (err) {
-      alert(err.response?.data?.detail || 'Gagal menghapus produk')
+      toast.error(err.response?.data?.detail || 'Gagal menghapus produk')
     } finally {
       deleting.value = false
     }

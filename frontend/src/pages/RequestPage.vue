@@ -45,6 +45,16 @@
             <option value="rejected">Ditolak</option>
           </select>
         </div>
+
+        <button
+          v-if="authStore.role !== 'employee'"
+          @click="handleExport"
+          :disabled="exporting"
+          class="flex items-center gap-1.5 rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+        >
+          <Download class="h-4 w-4" />
+          {{ exporting ? 'Mengekspor...' : 'Export CSV' }}
+        </button>
       </div>
 
       <div v-if="loading" class="flex items-center gap-2 py-10 text-sm text-gray-400">
@@ -61,9 +71,12 @@
         <RequestTable
           v-else
           :requests="paginatedRequests"
+          :start-index="startIndex"
           @detail="openDetail"
           @edit="openEdit"
           @delete="handleDelete"
+          @approve="handleApprove"
+          @reject="handleReject"
         />
   
         <div v-if="filteredRequests.length > 0" class="mt-4 flex items-center justify-between">
@@ -125,25 +138,48 @@
         @confirm="confirmDelete"
         @cancel="showDeleteConfirm = false"
       />
+
+      <ConfirmDialog
+        v-if="showApproveConfirm"
+        :title="`Approve pengajuan #${pendingApproveId}?`"
+        message="Stok produk terkait akan otomatis berkurang setelah disetujui."
+        confirm-text="Approve"
+        :loading="approving"
+        @confirm="confirmApprove"
+        @cancel="showApproveConfirm = false"
+      />
+
+      <RejectReasonModal
+        v-if="showRejectModal"
+        :title="`Reject pengajuan #${pendingRejectId}?`"
+        :loading="rejecting"
+        @confirm="confirmReject"
+        @cancel="showRejectModal = false"
+      />
     </div>
   </template>
 
   <script setup>
   import { ref, onMounted, computed, watch } from 'vue'
-  import { ClipboardList, Plus } from 'lucide-vue-next'
+  import { ClipboardList, Plus, Download } from 'lucide-vue-next'
   import requestApi from '@/api/requestApi'
   import productApi from '@/api/productApi'
   import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
+  import RejectReasonModal from '@/components/common/RejectReasonModal.vue'
   import { useAuthStore } from '@/stores/auth'
+  import { downloadBlob } from '@/utils/download'
   import RequestTable from '@/components/request/RequestTable.vue'
   import RequestFormModal from '@/components/request/RequestFormModal.vue'
   import RequestDetailModal from '@/components/request/RequestDetailModal.vue'
-  
+  import { useToastStore } from '@/stores/toast'
+
+  const toast = useToastStore()
   const authStore = useAuthStore()
   const requests = ref([])
   const products = ref([])
   const loading = ref(true)
   const error = ref(null)
+  const exporting = ref(false)
   const showForm = ref(false)
   const selectedRequestId = ref(null)
   
@@ -213,6 +249,22 @@
     filteredRequests.value.slice(startIndex.value, startIndex.value + pageSize)
   )
   
+  const handleExport = async () => {
+    try {
+      exporting.value = true
+      const params = {}
+      if (statusFilter.value !== 'all') params.status = statusFilter.value
+      if (searchQuery.value.trim()) params.search = searchQuery.value.trim()
+      const res = await requestApi.export(params)
+      downloadBlob(res.data, 'pengajuan.csv')
+    } catch (err) {
+      console.error(err)
+      toast.error('Gagal mengekspor data pengajuan')
+    } finally {
+      exporting.value = false
+    }
+  }
+
   watch([searchQuery, statusFilter], () => {
     currentPage.value = 1
   })
@@ -239,7 +291,7 @@
       showDeleteConfirm.value = false
       await fetchRequests()
     } catch (err) {
-      alert(err.response?.data?.detail || 'Gagal menghapus pengajuan')
+      toast.error(err.response?.data?.detail || 'Gagal menghapus pengajuan')
     } finally {
       deleting.value = false
     }
@@ -247,6 +299,50 @@
   
   const openDetail = (id) => {
     selectedRequestId.value = id
+  }
+
+  const showApproveConfirm = ref(false)
+  const approving = ref(false)
+  const pendingApproveId = ref(null)
+
+  const handleApprove = (id) => {
+    pendingApproveId.value = id
+    showApproveConfirm.value = true
+  }
+
+  const confirmApprove = async () => {
+    try {
+      approving.value = true
+      await requestApi.approve(pendingApproveId.value, 'approved')
+      showApproveConfirm.value = false
+      await fetchRequests()
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Gagal meng-approve pengajuan')
+    } finally {
+      approving.value = false
+    }
+  }
+
+  const showRejectModal = ref(false)
+  const rejecting = ref(false)
+  const pendingRejectId = ref(null)
+
+  const handleReject = (id) => {
+    pendingRejectId.value = id
+    showRejectModal.value = true
+  }
+
+  const confirmReject = async (reason) => {
+    try {
+      rejecting.value = true
+      await requestApi.approve(pendingRejectId.value, 'rejected', reason)
+      showRejectModal.value = false
+      await fetchRequests()
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Gagal me-reject pengajuan')
+    } finally {
+      rejecting.value = false
+    }
   }
   
   const editingRequest = ref(null)

@@ -19,7 +19,9 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://202.155.16.63:8000',
+        // Points at the local backend (uvicorn on :8000). Swap back to
+        // 'http://202.155.16.63:8000' to test against the VPS instead.
+        target: 'http://localhost:8000',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },

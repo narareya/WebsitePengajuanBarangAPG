@@ -7,6 +7,7 @@ from app.config.database import get_db
 from app.schemas.request_schema import RequestCreate, RequestApprove, RequestResponse, RequestWithDetailsResponse
 from app.services import request_service
 from app.middlewares.auth_middleware import get_current_user, require_role
+from app.utils.csv_export import build_csv_response
 
 router = APIRouter(prefix="/requests", tags=["Requests"])
 
@@ -43,6 +44,21 @@ def get_my_requests(
     db: Session = Depends(get_db)
 ):
     return request_service.get_requests_by_user_filtered(db, current_user.user_id, status, page, limit)
+
+
+@router.get("/export")
+def export_requests(
+    status: Optional[str] = Query(None),
+    search: Optional[str] = Query(None),
+    current_user=Depends(require_role("manager", "admin")),
+    db: Session = Depends(get_db)
+):
+    rows = request_service.get_requests_for_export(db, status, search)
+    return build_csv_response(
+        "pengajuan.csv",
+        ["ID", "Tanggal", "Pemohon", "Status", "Barang", "Tanggal Diproses"],
+        rows
+    )
 
 
 @router.get("/{request_id}", response_model=RequestWithDetailsResponse)

@@ -18,5 +18,8 @@ export default {
   },
   delete(id) {
     return api.delete(`/products/${id}`)
+  },
+  addStock(id, quantity) {
+    return api.patch(`/products/${id}/add-stock`, { quantity })
   }
 }

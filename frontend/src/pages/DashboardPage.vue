@@ -54,25 +54,65 @@
     </div>
 
     <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
-      <div class="rounded-lg border border-gray-200 bg-white p-5 lg:col-span-1">
-        <p class="text-sm font-medium text-gray-500">Status Pengajuan</p>
+      <div class="flex flex-col gap-4 lg:col-span-1">
+        <div class="rounded-lg border border-gray-200 bg-white p-5">
+          <p class="text-sm font-medium text-gray-500">Status Pengajuan</p>
 
-        <div v-if="loading" class="mt-4 space-y-3">
-          <div v-for="i in 3" :key="i" class="h-4 w-full animate-pulse rounded bg-gray-100"></div>
+          <div v-if="loading" class="mt-4 space-y-3">
+            <div v-for="i in 3" :key="i" class="h-4 w-full animate-pulse rounded bg-gray-100"></div>
+          </div>
+
+          <div v-else class="mt-4 space-y-3">
+            <div
+              v-for="item in statusBreakdown"
+              :key="item.label"
+              class="flex items-center justify-between text-sm"
+            >
+              <div class="flex items-center gap-2">
+                <span class="h-2.5 w-2.5 rounded-full" :class="item.dotClass"></span>
+                <span class="text-gray-600">{{ item.label }}</span>
+              </div>
+              <span class="font-semibold text-gray-900">{{ item.value }}</span>
+            </div>
+          </div>
         </div>
 
-        <div v-else class="mt-4 space-y-3">
-          <div
-            v-for="item in statusBreakdown"
-            :key="item.label"
-            class="flex items-center justify-between text-sm"
-          >
-            <div class="flex items-center gap-2">
-              <span class="h-2.5 w-2.5 rounded-full" :class="item.dotClass"></span>
-              <span class="text-gray-600">{{ item.label }}</span>
-            </div>
-            <span class="font-semibold text-gray-900">{{ item.value }}</span>
+        <div v-if="authStore.role !== 'employee'" class="rounded-lg border border-gray-200 bg-white p-5">
+          <div class="flex items-center justify-between">
+            <p class="text-sm font-medium text-gray-500">Stok Menipis</p>
+            <router-link
+              v-if="authStore.role === 'admin'"
+              to="/master/products"
+              class="text-xs font-medium text-indigo-600 hover:text-indigo-500"
+            >
+              Lihat semua
+            </router-link>
           </div>
+
+          <div v-if="loading" class="mt-4 space-y-3">
+            <div v-for="i in 3" :key="i" class="h-4 w-full animate-pulse rounded bg-gray-100"></div>
+          </div>
+
+          <ul v-else-if="summary.lowStockProducts.length" class="mt-4 space-y-3">
+            <li
+              v-for="p in summary.lowStockProducts"
+              :key="p.product_id"
+              class="flex items-center justify-between text-sm"
+            >
+              <span class="flex items-center gap-2 text-gray-600">
+                <span class="h-2.5 w-2.5 rounded-full" :class="p.stock_quantity <= 0 ? 'bg-red-500' : 'bg-amber-500'"></span>
+                {{ p.product_name }}
+              </span>
+              <span
+                class="rounded-full px-2 py-0.5 text-xs font-medium"
+                :class="p.stock_quantity <= 0 ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'"
+              >
+                {{ p.stock_quantity }} tersisa
+              </span>
+            </li>
+          </ul>
+
+          <p v-else class="mt-4 text-sm text-gray-400">Semua stok aman.</p>
         </div>
       </div>
 
@@ -135,7 +175,10 @@ const summary = ref({
   pendingApproval: 0,
   totalTrend: null,
   byStatus: {},
+  lowStockCount: 0,
+  lowStockProducts: [],
 })
+
 const recentActivity = ref([])
 
 const todayLabel = computed(() =>
@@ -199,6 +242,8 @@ async function fetchSummary() {
       pendingApproval: s.pending_approval,
       totalTrend: s.total_trend,
       byStatus: s.by_status,
+      lowStockCount: s.low_stock_count,
+      lowStockProducts: s.low_stock_products,
     }
 
     recentActivity.value = activityRes.data.map((item) => ({

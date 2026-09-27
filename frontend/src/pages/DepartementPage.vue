@@ -97,7 +97,9 @@
   import DepartementTable from '@/components/departement/DepartementTable.vue'
   import DepartementFormModal from '@/components/departement/DepartementFormModal.vue'
   import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
-  
+  import { useToastStore } from '@/stores/toast'
+
+  const toast = useToastStore()
   const departments = ref([])
   const loading = ref(true)
   const error = ref(null)
@@ -170,7 +172,7 @@
       showDeleteConfirm.value = false
       await fetchDepartments()
     } catch (err) {
-      alert(err.response?.data?.detail || 'Gagal menghapus department')
+      toast.error(err.response?.data?.detail || 'Gagal menghapus department')
     } finally {
       deleting.value = false
     }

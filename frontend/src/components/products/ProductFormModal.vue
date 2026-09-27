@@ -21,6 +21,10 @@
             <input v-model.number="form.product_price" type="number" min="0" class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm" />
           </div>
           <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700">Stok</label>
+            <input v-model.number="form.stock_quantity" type="number" min="0" class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm" />
+          </div>
+          <div>
             <label class="mb-1 block text-sm font-medium text-gray-700">Status</label>
             <select v-model="form.product_status" class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
               <option value="active">Active</option>
@@ -63,6 +67,7 @@
     product_name: props.product?.product_name || '',
     product_desc: props.product?.product_desc || '',
     product_price: props.product?.product_price || 0,
+    stock_quantity: props.product?.stock_quantity ?? 0,
     product_status: props.product?.product_status || 'active'
   })
   

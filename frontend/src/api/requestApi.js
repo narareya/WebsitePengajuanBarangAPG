@@ -31,5 +31,8 @@ export default {
   },
   downloadAttachment(id) {
     return api.get(`/requests/${id}/attachment`, { responseType: 'blob' })
+  },
+  export(params) {
+    return api.get('/requests/export', { params, responseType: 'blob' })
   }
 }

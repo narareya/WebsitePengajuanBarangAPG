@@ -26,10 +26,21 @@ def create_request(db: Session, user_id: int, items: list[dict]):
     return get_request_with_details(db, request.request_id)
 
 
+def _with_items_summary(db: Session, requests):
+    for r in requests:
+        details = request_detail_repository.find_by_request(db, r.request_id)
+        r.items_summary = "; ".join(f"{d.quantity}x {d.product_name}" for d in details)
+        r.stock_warning = r.status == "pending" and any(
+            d.product_stock is not None and d.quantity > d.product_stock for d in details
+        )
+    return requests
+
+
 def get_all_requests_filtered(db: Session, status: str, search: str, page: int, limit: int):
     result = request_repository.find_filtered(db, status=status, search=search, page=page, limit=limit)
+    items = _with_items_summary(db, result["items"])
     return {
-        "items": [RequestResponse.model_validate(r) for r in result["items"]],
+        "items": [RequestResponse.model_validate(r) for r in items],
         "total": result["total"],
         "page": result["page"],
         "limit": result["limit"],
@@ -39,13 +50,29 @@ def get_all_requests_filtered(db: Session, status: str, search: str, page: int, 
 
 def get_requests_by_user_filtered(db: Session, user_id: int, status: str, page: int, limit: int):
     result = request_repository.find_filtered(db, status=status, user_id=user_id, page=page, limit=limit)
+    items = _with_items_summary(db, result["items"])
     return {
-        "items": [RequestResponse.model_validate(r) for r in result["items"]],
+        "items": [RequestResponse.model_validate(r) for r in items],
         "total": result["total"],
         "page": result["page"],
         "limit": result["limit"],
         "total_pages": (result["total"] + limit - 1) // limit if limit else 1
     }
+
+
+def get_requests_for_export(db: Session, status: str, search: str, user_id: int = None):
+    requests = _with_items_summary(db, request_repository.find_all_filtered(db, status=status, search=search, user_id=user_id))
+    return [
+        [
+            r.request_id,
+            r.request_date.strftime("%Y-%m-%d %H:%M:%S") if r.request_date else "",
+            r.user_name,
+            r.status,
+            r.items_summary,
+            r.approved_at.strftime("%Y-%m-%d %H:%M:%S") if r.approved_at else "",
+        ]
+        for r in requests
+    ]
 
 
 def get_request(db: Session, request_id: int):
@@ -83,6 +110,17 @@ def approve_request(db: Session, request_id: int, approved_by: int, new_status: 
 
     if request.status != "pending":
         raise HTTPException(status_code=400, detail="Request ini sudah diproses sebelumnya")
+
+    if new_status == "approved":
+        details = request_detail_repository.find_by_request(db, request_id)
+        for item in details:
+            if item.product.stock_quantity < item.quantity:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Stok {item.product.product_name} tidak cukup (tersisa {item.product.stock_quantity}, diminta {item.quantity})"
+                )
+        for item in details:
+            product_repository.decrement_stock(db, item.product_id, item.quantity)
 
     result = request_repository.approve(db, request_id, approved_by, new_status)
 
